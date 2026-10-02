@@ -1,5 +1,7 @@
 import pygame
 
+# WHOLE CLASS IS OBSOLETE
+
 class Dude:
     screen, x, y = None, None, None
     WIDTH = 5

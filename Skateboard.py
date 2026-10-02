@@ -3,13 +3,17 @@ import math
 
 # width 170
 LENGTH = 170
+DUDE_POINT = 75
+TORSO_HEIGHT = 150
+NECK_HEIGHT = 30
+LEG_HEIGHT = 125
 TAIL_WIDTH = 30
 TAIL_ANGLE = 25
 TIRE_ANGLE = 23
 TIRE_GAP = 33
 
 class Skateboard:
-    screen, x, y = None, None, None
+    screen, x, y, flat_y = None, None, None, None
     WIDTH = 5
     jump_speed = 3
     
@@ -18,6 +22,7 @@ class Skateboard:
         self.x = _x
         self.y = _y
         self.jump_speed = _js
+        self.flat_y = _y
     
     def calc_x_y_raw(self, angle, length):
         # sin(alpha) = a / c
@@ -41,10 +46,25 @@ class Skateboard:
         pygame.draw.line(self.screen, "black", (self.x, self.y), (self.x + LENGTH, self.y), width=self.WIDTH)
         pygame.draw.line(self.screen, "black", (self.x + LENGTH, self.y), (self.x + LENGTH + tnx, self.y - tny), width=self.WIDTH)
         pygame.draw.line(self.screen, "black", (self.x, self.y), (self.x - tnx, self.y - tny), width=self.WIDTH)
-
+        # TIRES
         ltx, lty = self.calc_x_y(TIRE_ANGLE, TIRE_GAP)
         pygame.draw.circle(self.screen, "black", (self.x + ltx, self.y + lty),10,3)
         pygame.draw.circle(self.screen, "black", (self.x + LENGTH - ltx, self.y + lty),10,3)
+
+        # DUDE
+        # TORSO
+        tox,toy = self.x + DUDE_POINT, self.y - LEG_HEIGHT
+        pygame.draw.line(self.screen, "black", (tox, toy), (tox, toy - TORSO_HEIGHT), 2)
+        pygame.draw.circle(self.screen, "black", (tox, toy - TORSO_HEIGHT - 30), 30, 2)
+        # LLEG, anchor to x,y
+        pygame.draw.line(self.screen, "black", (tox, toy), ((self.x, self.y)), 2)
+        # RLEG
+        rlx, rly = self.calc_x_y(50 ,LEG_HEIGHT/2)
+        pygame.draw.line(self.screen, "black", (tox, toy), ((tox + rlx, toy + rly)), 2)
+        stance_w = 130
+        pygame.draw.line(self.screen, "black", (self.x + stance_w, self.y), ((tox + rlx, toy + rly)), 2)
+        
+
     
     def draw_ollie_nose(self, angle, length):
         x, y = self.calc_x_y(angle, length)
@@ -67,7 +87,22 @@ class Skateboard:
         tire_gap,_ = self.calc_x_y(TIRE_ANGLE, TIRE_GAP)
         rtx, rty = self.calc_x_y(angle, LENGTH - tire_gap * 2)
         pygame.draw.circle(self.screen, "black", (self.x + ltx + rtx, self.y + lty - rty),10,3)
-    
+
+        # TORSO
+        tox, toy = self.calc_x_y(angle, DUDE_POINT)
+        pygame.draw.line(self.screen, "black", (self.x+tox, self.y - toy - LEG_HEIGHT), (self.x+tox, self.y - toy - TORSO_HEIGHT - LEG_HEIGHT), 2)
+        pygame.draw.circle(self.screen, "black", (self.x + tox, self.y - toy - TORSO_HEIGHT - LEG_HEIGHT - 30), 30, 2)
+        tox = self.x + tox
+        toy = self.y - toy - LEG_HEIGHT
+        #LLEG
+        pygame.draw.line(self.screen, "black", (tox, toy), ((self.x, self.y)), 2)
+        #RLEG
+        rlx, rly = self.calc_x_y(50 - angle, LEG_HEIGHT/2)
+        pygame.draw.line(self.screen, "black", (tox, toy), (tox + rlx, toy + rly), 2)
+        stance_w = 130
+        rsx,rsy = self.calc_x_y(angle,stance_w)
+        pygame.draw.line(self.screen, "black", (self.x + rsx, self.y - rsy), (tox + rlx, toy + rly), 2)
+
 
     # As we are lifting tail we need to draw the deck inverted
     def draw_ollie_tail(self, angle, length, lift_angle):
@@ -81,7 +116,8 @@ class Skateboard:
             ty *= -1
 
         #print(a_y - b_y)
-        pygame.draw.line(self.screen, "black", (self.x + b_x, self.y - b_y), (self.x + b_x - a_x, self.y - (b_y - a_y)), width=self.WIDTH)
+        ogx, ogy = self.x + b_x - a_x, self.y - (b_y - a_y)
+        pygame.draw.line(self.screen, "black", (self.x + b_x, self.y - b_y), (ogx, ogy), width=self.WIDTH)
         pygame.draw.line(self.screen, "black", (self.x + b_x, self.y - b_y), (self.x + b_x + nx, self.y - b_y - ny), width=self.WIDTH)
         pygame.draw.line(self.screen, "black", (self.x + b_x - a_x, self.y - (b_y - a_y)), (self.x + b_x - a_x - tx, self.y - (b_y - a_y) + ty), width=self.WIDTH)
         
@@ -91,34 +127,60 @@ class Skateboard:
         ltx, lty = self.calc_x_y(angle, LENGTH - tire_gap * 2)
         pygame.draw.circle(self.screen, "black", (self.x + b_x - rtx - ltx, self.y - b_y + rty + lty),10,3)
 
+        # TORSO
+        tox, toy = self.calc_x_y(angle, LENGTH - DUDE_POINT)
+        tox = self.x + b_x - tox
+        toy = self.y - b_y + toy - LEG_HEIGHT
+        pygame.draw.line(self.screen, "black", (tox, toy), (tox, toy - TORSO_HEIGHT), 2)
+        pygame.draw.circle(self.screen, "black", (tox, toy - TORSO_HEIGHT - 30), 30, 2)
+        pygame.draw.line(self.screen, "black", (tox, toy), (ogx, ogy), 2)
+        rlx, rly = self.calc_x_y(50 + angle, LEG_HEIGHT/2)
+        pygame.draw.line(self.screen, "black", (tox, toy), (tox + rlx, toy + rly), 2)
+        stance_w = 130
+        rsx,rsy = self.calc_x_y(angle, stance_w)
+        pygame.draw.line(self.screen, "black", (ogx + rsx, ogy - rsy), (tox + rlx, toy + rly), 2)
+
     
     rising_angle = 0
     r_asc = True
     r_desc = False
     falling_distance = 0
     travel_distance = 0
+    rotate_compensation = 0
     def ollie_2(self):
-        
+        LIFT_SPEED = 5
         LIFT_ANGLE = 45
-        FALL_SPEED = 5
-        NOSE_SPEED = 5
-        TAIL_SPEED = 4
+        FALL_SPEED = 7
+        NOSE_SPEED = 7 # 6
+        TAIL_SPEED = 5 # 5
         X_SPEED = 1.5
+        COMPENSATION = 4 # 4
         
         if self.r_asc:
             self.rising_angle += NOSE_SPEED
             self.draw_ollie_nose(self.rising_angle, LENGTH)
             self.travel_distance += X_SPEED / 2
             self.x += X_SPEED / 2
+            if self.rising_angle >= TAIL_ANGLE:
+                self.y -= COMPENSATION
+                self.falling_distance += COMPENSATION
+            else:
+                self.y += COMPENSATION
+                self.falling_distance -= COMPENSATION
+                
         elif not self.r_desc:
             self.rising_angle -= TAIL_SPEED
             self.travel_distance += X_SPEED
+            self.y -= LIFT_SPEED
+            self.falling_distance += LIFT_SPEED
             self.x += X_SPEED
             self.draw_ollie_tail(self.rising_angle * -1, LENGTH, LIFT_ANGLE)
         else:
             #print(self.falling_distance)
-            self.falling_distance -= FALL_SPEED
-            self.y += FALL_SPEED if self.falling_distance > 0 else 0
+            self.falling_distance -= FALL_SPEED if self.falling_distance != 0 else 0
+            self.y += FALL_SPEED
+            if self.y > self.flat_y:
+                self.y = self.flat_y
 
             self.travel_distance -= X_SPEED / 5
             self.x -= X_SPEED / 5
@@ -131,7 +193,6 @@ class Skateboard:
                 self.r_desc = False
                 self.falling_distance = 0
                 self.travel_distance = 0
-                print(self.travel_distance)
                 return True
 
         if self.rising_angle >= LIFT_ANGLE:
@@ -139,7 +200,7 @@ class Skateboard:
         elif self.rising_angle <= 0 and not self.r_desc:
             self.r_desc = True
             _,y = self.calc_x_y(LIFT_ANGLE, LENGTH)
-            self.falling_distance = y
+            self.falling_distance += y
             self.y -= y
             self.x -= X_SPEED
             #print("fall dist: ", y, " y now: ", self.y)
@@ -184,74 +245,13 @@ class Skateboard:
     def infinite_board(self):
         self.draw()
         return False
-    
-    def draw_start_ollie(self, m):
-        # tail
-        sx, sy = self.x, self.y - m
-        ex, ey = self.x + 20 - m, self.y + 10 + m / 2
-        pygame.draw.line(self.screen, "black", (sx, sy), (ex, ey), width=self.WIDTH)
 
-        # deck
-        sx, sy = ex, ey
-        ex += 130 + m
-        ey += 0 + m * 4
-        pygame.draw.line(self.screen, "black", (sx, sy), (ex, ey), width=self.WIDTH)
-
-        # tires
-        pygame.draw.circle(self.screen, "black", (sx + 20 + m, ey + 15 - m * 3.5), 10, width=self.WIDTH)
-        pygame.draw.circle(self.screen, "black", (sx + 110, ey + 15 + m * 0.1), 10, width=self.WIDTH)
-
-        # nose
-        sx, sy = ex, ey
-        ex += 20 + m
-        ey -= 10 - (m * 2)
-        pygame.draw.line(self.screen, "black", (sx, sy), (ex, ey), width=self.WIDTH)
-        
-    
     ROLL_LENGTH = 60
     roll_current = 0
     def roll_to_view(self) -> bool:
-        if self.x < 270:
-            self.x += 10
+        if self.x < 370:
+            self.x += 20
         else:
             self.roll_current += 1
         self.draw()
-        return self.x >= 270 and self.roll_current >= self.ROLL_LENGTH # idle for 1 sec after coming to screen
-    
-    JUMP_CAP = -7
-    jump_current = 0
-    rising = True
-    leveling = False
-    falling = False
-    height_gained = 0
-    def ollie(self):
-        pop_speed = 0.5
-        rise_speed = self.jump_speed
-        if self.rising:
-            self.y -= rise_speed
-            self.height_gained -= rise_speed
-            self.jump_current -= pop_speed
-            self.draw_start_ollie(self.jump_current)
-            if self.jump_current <= self.JUMP_CAP:
-                self.rising = False
-                self.leveling = True
-        elif self.leveling:
-            self.y -= rise_speed
-            self.height_gained -= rise_speed
-            self.jump_current += pop_speed
-            self.draw_start_ollie(self.jump_current)
-            if self.jump_current >= 0:
-                self.leveling = False
-                self.falling = True
-        elif self.falling:
-            self.y += rise_speed * 1.5
-            self.height_gained += rise_speed * 1.5
-            self.draw()
-        if self.height_gained >= 0: # Reset for re-usability
-            self.jump_current = 0
-            self.rising = True
-            self.leveling = False
-            self.falling = False
-            self.height_gained = 0
-        return self.height_gained >= 0
-            
+        return self.x >= 370 and self.roll_current >= self.ROLL_LENGTH # idle for 1 sec after coming to screen
